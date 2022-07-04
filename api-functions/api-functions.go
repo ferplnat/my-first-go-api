@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"my-first-go-api/database"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -22,7 +23,7 @@ var dbConn = database.ConnectSql()
 func GetAlbums(c *gin.Context) {
 	// albums slice to seed record album data.
 	var albums []Album
-	columns := []string{"id", "title", "artist", "price"}
+	columns := []string{"*"}
 
 	rows, err := database.SelectSql(columns, "albums.album_info", dbConn)
 
@@ -70,4 +71,41 @@ func PostAlbums(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusCreated, fmt.Sprintf("%d\n", rowCnt))
+}
+
+// UpdateAlbum updates records for an album, specified by "id" in Uri parameters
+func UpdateAlbum(c *gin.Context) {
+	// Parse uri for parameters
+	uriQuery := c.Query("id")
+
+	// Convert to int/validate that the uri parameter is an int (only acceptable value for id)
+	id, err := strconv.Atoi(uriQuery)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Call BindJSON to bind the received JSON to
+	// updateAlbum
+	var updateAlbum Album
+	if err := c.BindJSON(&updateAlbum); err != nil {
+		return
+	}
+
+	res, err := dbConn.Exec("UPDATE albums.album_info SET artist = $1, title = $2, price = $3 WHERE id = $4", updateAlbum.Artist, updateAlbum.Title, updateAlbum.Price, id)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		panic(err)
+	}
+
+	if rowCnt == 0 {
+		c.IndentedJSON(http.StatusNotModified, "0 records modified. id may be invalid")
+	} else {
+		c.IndentedJSON(http.StatusAccepted, fmt.Sprintf("Updated %d record.\n", rowCnt))
+	}
 }
