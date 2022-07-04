@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"my-first-go-api/database"
 	"net/http"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -92,7 +94,48 @@ func UpdateAlbum(c *gin.Context) {
 		return
 	}
 
-	res, err := dbConn.Exec("UPDATE albums.album_info SET artist = $1, title = $2, price = $3 WHERE id = $4", updateAlbum.Artist, updateAlbum.Title, updateAlbum.Price, id)
+	// Begin constructing SQL Query
+	sqlQuery := "UPDATE albums.album_info SET "
+
+	// Prepare to get field and value info from struct
+	albumInfo := reflect.ValueOf(updateAlbum)
+	albumItem := albumInfo.Type()
+
+	// Create slice to store values that will be updated
+	updateValues := []any{}
+
+	// Variable to track how many iterations have been skipped, since we're using a struct
+	// all of the fields will always be present. Thus, there will always be the same amount
+	// of iterations. We want to skip blank/unpopulated values.
+	skipped := 0
+	for i := 0; i < albumInfo.NumField(); i++ {
+		// Get field and value info from struct
+		field := strings.ToLower(albumItem.Field(i).Name)
+		value := fmt.Sprint(albumInfo.Field(i).Interface())
+
+		// Check if value is blank, or if the field is 'id'. 'id' is parsed from Uri params
+		if strings.TrimSpace(value) != "" && field != "id" {
+			// If it's the first iteration, don't append a comma
+			if i-skipped != 0 {
+				sqlQuery = sqlQuery + ", "
+			}
+			updateValues = append(updateValues, string(value))
+			// Probably a better way to do this, but creating the string for interpolation
+			// to preserve the sanitization functionality of db.Exec() I am still creating
+			// the interpolated values in the sqlQuery. Adding 1 so that the interpolation
+			// definition is never 0, subtracting skipped iterations to make sure that the
+			// interpolation remains sequential, otherwise, it won't work. Pray I am smart
+			sqlQuery = sqlQuery + fmt.Sprintf("%s = $%d", field, i+1-skipped)
+		} else {
+			// If value is blank/not populated OR if field is 'id', consider it skipped
+			skipped++
+		}
+	}
+	sqlQuery = sqlQuery + fmt.Sprintf(" WHERE id = %d", id)
+
+	fmt.Println(sqlQuery)
+
+	res, err := dbConn.Exec(sqlQuery, updateValues...)
 
 	if err != nil {
 		panic(err.Error())
