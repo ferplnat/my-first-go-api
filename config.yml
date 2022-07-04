@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+database:
+  dbtype: "postgres"
+  dbhost: "localhost"
+  dbport: 49153
+  dbuser: "postgres"
+  dbpassword: "postgrespw"
+  dbname: "postgres"

@@ -3,26 +3,20 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"my-first-go-api/config"
 	"strings"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbtype     string = "postgres"
-	dbhost     string = "localhost"
-	dbport     int    = 49153
-	dbuser     string = "postgres"
-	dbpassword string = "postgrespw"
-	dbname     string = "postgres"
-)
-
 func ConnectSql() (db *sql.DB) {
+	conf := config.LoadConfiguration()
+
 	sqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		dbhost, dbport, dbuser, dbpassword, dbname)
+		conf.Database.DBHost, conf.Database.DBPort, conf.Database.DBUser, conf.Database.DBPassword, conf.Database.DBName)
 
-	db, err := sql.Open(dbtype, sqlInfo)
+	db, err := sql.Open(conf.Database.DBType, sqlInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +25,7 @@ func ConnectSql() (db *sql.DB) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Successfully connected to: %s"+"\n", dbhost)
+	fmt.Printf("Successfully connected to: %s"+"\n", conf.Database.DBHost)
 
 	return db
 }
