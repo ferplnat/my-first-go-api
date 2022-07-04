@@ -48,3 +48,30 @@ func SelectSql(columns []string, table string, dbConn *sql.DB, orderBy string, d
 
 	return rows, nil
 }
+
+func ValidateId(id int, table string, dbConn *sql.DB) bool {
+	var ids []int
+	sqlQuery := fmt.Sprintf("SELECT id FROM %s WHERE id = %d", table, id)
+	rows, err := dbConn.Query(sqlQuery)
+
+	if err != nil {
+		return false
+	}
+	if rows == nil {
+		return false
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var idRes int
+		if err := rows.Scan(&idRes); err != nil {
+			return false
+		}
+		ids = append(ids, idRes)
+	}
+	if ids != nil {
+		return true
+	}
+
+	return false
+}

@@ -106,6 +106,11 @@ func UpdateAlbum(c *gin.Context) {
 	// Convert to int/validate that the uri parameter is an int (only acceptable value for id)
 	id, err := strconv.Atoi(uriId)
 
+	vId := database.ValidateId(id, "albums.album_info", dbConn)
+	if vId == false {
+		c.IndentedJSON(http.StatusBadRequest, "ID not found in database.")
+	}
+
 	if err != nil {
 		panic(err)
 	}
