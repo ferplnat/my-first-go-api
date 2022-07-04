@@ -78,10 +78,10 @@ func PostAlbums(c *gin.Context) {
 // UpdateAlbum updates records for an album, specified by "id" in Uri parameters
 func UpdateAlbum(c *gin.Context) {
 	// Parse uri for parameters
-	uriQuery := c.Query("id")
+	uriId := c.Query("id")
 
 	// Convert to int/validate that the uri parameter is an int (only acceptable value for id)
-	id, err := strconv.Atoi(uriQuery)
+	id, err := strconv.Atoi(uriId)
 
 	if err != nil {
 		panic(err)
