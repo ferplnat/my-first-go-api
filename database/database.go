@@ -36,11 +36,6 @@ func ConnectSql() (db *sql.DB) {
 	return db
 }
 
-// insert function, returns affected rows.
-// func InsertSql() int {
-
-// }
-
 // select function, returns data rows.
 func SelectSql(columns []string, table string, dbConn *sql.DB) (*sql.Rows, error) {
 	sqlQuery := fmt.Sprintf("SELECT %s FROM %s", strings.Join(columns[:], ","), table)

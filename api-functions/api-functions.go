@@ -2,11 +2,11 @@ package apifunctions
 
 import (
 	"fmt"
-	"log"
 	"my-first-go-api/database"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 type Album struct {
@@ -58,19 +58,16 @@ func PostAlbums(c *gin.Context) {
 		return
 	}
 
-	res, err := dbConn.Exec("INSERT INTO albums.album_info VALUES(?)", newAlbum)
+	res, err := dbConn.Exec("INSERT INTO albums.album_info (artist, title, price) VALUES ($1, $2, $3)", newAlbum.Artist, newAlbum.Title, newAlbum.Price)
 
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
-	c.IndentedJSON(http.StatusCreated, fmt.Sprintf("ID = %d, affected = %d\n", lastId, rowCnt))
+	c.IndentedJSON(http.StatusCreated, fmt.Sprintf("%d\n", rowCnt))
 }
