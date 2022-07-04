@@ -23,11 +23,34 @@ var dbConn = database.ConnectSql()
 
 // getAlbums responds with the list of all albums as JSON.
 func GetAlbums(c *gin.Context) {
+	var err error
+
+	// Optional order by
+	uriOrderBy := strings.TrimSpace(c.Query("orderBy"))
+	if uriOrderBy == "" {
+		uriOrderBy = "id"
+	}
+
+	// Optional desc for order by
+	uriDesc := strings.TrimSpace(c.Query("desc"))
+	desc := 0
+	if uriDesc != "" {
+		desc, err = strconv.Atoi(uriDesc)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, "desc can only be 0 or 1")
+			return
+		}
+		if desc != 0 && desc != 1 {
+			c.IndentedJSON(http.StatusBadRequest, "desc can only be 0 or 1")
+			return
+		}
+	}
+
 	// albums slice to seed record album data.
 	var albums []Album
 	columns := []string{"*"}
 
-	rows, err := database.SelectSql(columns, "albums.album_info", dbConn)
+	rows, err := database.SelectSql(columns, "albums.album_info", dbConn, uriOrderBy, desc)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, err.Error())

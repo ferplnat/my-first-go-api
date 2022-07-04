@@ -37,8 +37,11 @@ func ConnectSql() (db *sql.DB) {
 }
 
 // select function, returns data rows.
-func SelectSql(columns []string, table string, dbConn *sql.DB) (*sql.Rows, error) {
-	sqlQuery := fmt.Sprintf("SELECT %s FROM %s ORDER BY id", strings.Join(columns[:], ","), table)
+func SelectSql(columns []string, table string, dbConn *sql.DB, orderBy string, desc int) (*sql.Rows, error) {
+	sqlQuery := fmt.Sprintf("SELECT %s FROM %s ORDER BY %s", strings.Join(columns[:], ","), table, orderBy)
+	if desc == 1 {
+		sqlQuery = sqlQuery + " DESC"
+	}
 	fmt.Println(sqlQuery)
 	rows, err := dbConn.Query(sqlQuery)
 
